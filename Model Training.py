@@ -1,12 +1,44 @@
 import pandas as pd
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
+import CsPy_Uploading as cs
+import os
 
 
 
-train = pd.read_csv('Retention_Model_Training_test.csv')
+query = """
 
-train = train.drop('Unnamed: 0', axis=1)
+            SELECT * FROM `0_Ellis_B.Retention_Model_Training_Data*`
+            
+            WHERE _TABLE_SUFFIX BETWEEN DATE_ADD(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY), INTERVAL -1 YEAR) AND DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY)
+
+                
+                """
+
+
+train = pd.DataFrame(cs.DownloadJob(
+    query=query,
+    input_data_from='BQ',
+    output_data_type='DATAFRAME',
+    # data_file='',
+    # dataframe='',
+    # columns='',
+    # upload_data_type='',
+    # bq_key_path='',
+    # bq_key_name='',
+    # bq_upload_type='',
+    # sql_server='',
+    # sql_key_path='',
+    # sql_key_name='',
+    save_file_path=os.path.join(os.path.dirname(__file__), 'CSV/'),
+    account_first_name='Ellis',
+    account_surname='Brew',
+    # account_file_path='',
+    # set_logging=True,
+    # set_testing=False,
+    # set_date_conversion=True
+    set_open_file=False,
+    set_clear_save_file_location=False).run())
 
 train['month'] = train['month'].astype(str)
 

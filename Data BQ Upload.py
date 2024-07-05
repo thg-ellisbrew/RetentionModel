@@ -309,14 +309,50 @@ SELECT DISTINCT
 
 """
 
-data_upload = cs.DownloadJob(
+
+data_upload = cs.UploadJob(
     query=query,
     input_data_from='BQ',
-    output_data_type='DATAFRAME',
-    # data_file='',
-    # dataframe='',
-    # columns='',
+    schema= [
+
+        ("locale_key", "INTEGER"),
+        ("order_date", "DATE"),
+        ("volume", "FLOAT"),
+        ("LY_Retention", "FLOAT"),
+        ("Black_Friday_Weekend", "INTEGER"),
+        ("Impact_Week_Ind", "INTEGER"),
+        ("Quarter", "INTEGER"),
+        ("Day", "INTEGER"),
+        ("Week", "INTEGER"),
+        ("Payday_Ind", "INTEGER"),
+        ("Singles_Ind", "INTEGER"),
+        ("Flash_Ind", "INTEGER"),
+        ("Golden_Week_Ind", "INTEGER"),
+        ("offer_ind", "INTEGER"),
+        ("order_sequence_no", "INTEGER"),
+        ("NC", "INTEGER"),
+        ("units", "INTEGER"),
+        ("revenue", "FLOAT"),
+        ("percentage_discount", "FLOAT"),
+        ("AUV", "FLOAT"),
+        ("myprotein_rev", "FLOAT"),
+        ("bfsd_rev", "FLOAT"),
+        ("vit_rev", "FLOAT"),
+        ("clothing_rev", "FLOAT"),
+        ("ha_rev", "FLOAT"),
+        ("veg_rev", "FLOAT"),
+        ("other_rev", "FLOAT"),
+        ("PRO_rev", "FLOAT"),
+        ("null_rev", "FLOAT"),
+        ("customer_lifetime", "INTEGER"),
+        ("order_frequency", "FLOAT"),
+        ("Retention90_Ind", "INTEGER")
+    ],
+    date_column='order_date',
     # upload_data_type='',
+    bq_project='agile-bonbon-662',
+    bq_dataset='0_Ellis_B',
+    bq_table='Retention_Model_Training_Data',
     # bq_key_path='',
     # bq_key_name='',
     # bq_upload_type='',
@@ -328,10 +364,8 @@ data_upload = cs.DownloadJob(
     account_surname='Brew',
     # account_file_path='',
     # set_logging=True,
-    # set_testing=False,
-    # set_date_conversion=True
-    set_open_file=False,
-    set_clear_save_file_location=False
+    set_clear_data_cache=True
+
 )
 
-data = pd.DataFrame(data_upload.run()).to_csv('Retention_Model_Training_test.csv')
+data_upload.run()
