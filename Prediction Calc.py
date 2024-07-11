@@ -1,12 +1,5 @@
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
-import xgboost as xgb
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import confusion_matrix
+
 import pickle
 from datetime import datetime
 import CsPy_Uploading as cs

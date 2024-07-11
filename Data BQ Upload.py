@@ -257,7 +257,6 @@ SELECT DISTINCT
                 , LY.Retention as LY_Retention
                 , CASE WHEN EXTRACT(MONTH FROM Order_date) = 11 AND EXTRACT(DAY FROM Order_Date) BETWEEN 15 and 29 THEN 1 ELSE 0 END AS Black_Friday_Weekend
                 , CASE WHEN EXTRACT(MONTH FROM order_date) IN (5) AND EXTRACT(DAY FROM order_date) BETWEEN 15 AND 30 THEN 1 ELSE 0 END AS Impact_Week_Ind
-                , EXTRACT(MONTH FROM order_date) as month
                 , EXTRACT(QUARTER FROM order_date) as Quarter
                 , EXTRACT(DAY FROM order_Date) as Day
                 , EXTRACT(WEEK FROM order_date) as Week

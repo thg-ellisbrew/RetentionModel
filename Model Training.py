@@ -10,7 +10,7 @@ query = """
 
             SELECT * FROM `0_Ellis_B.Retention_Model_Training_Data*`
             
-            WHERE _TABLE_SUFFIX BETWEEN DATE_ADD(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY), INTERVAL -1 YEAR) AND DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY)
+            WHERE _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY), INTERVAL -1 YEAR) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY) AS STRING), '-','')
 
                 
                 """
@@ -40,6 +40,9 @@ train = pd.DataFrame(cs.DownloadJob(
     set_open_file=False,
     set_clear_save_file_location=False).run())
 
+
+train['order_date'] = pd.to_datetime(train['order_date'])
+train['month'] = train['order_date'].dt.month
 train['month'] = train['month'].astype(str)
 
 train = pd.get_dummies(train, columns=['month'], prefix='month')
