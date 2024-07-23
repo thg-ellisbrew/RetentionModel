@@ -12,7 +12,7 @@ WITH
 Dates as (
 
   SELECT 
-          DATE_ADD(CURRENT_DATE, INTERVAL -2 DAY) AS Start_date
+          DATE_ADD(CURRENT_DATE, INTERVAL -5 DAY) AS Start_date
           , DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS End_date
 
 )
