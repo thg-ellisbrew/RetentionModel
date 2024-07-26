@@ -115,7 +115,7 @@ JP_NC_rf.fit(JP_NC_features_train.drop('order_date', axis=1), JP_NC_target_train
 query = """
             SELECT * FROM `0_Ellis_B.orders_to_predict*`
 
-            WHERE _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -5 DAY) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS STRING), '-','')
+            WHERE _TABLE_SUFFIX = REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS STRING), '-','')
 
             """
 
