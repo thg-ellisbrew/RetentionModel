@@ -14,8 +14,7 @@ WITH
 Training_dates AS (
 
               SELECT 
-                      DATE_ADD(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY), INTERVAL -1 YEAR) AS Start_Date
-                    , DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY) AS End_Date
+                      DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY) AS date
                     
 )
 
@@ -86,7 +85,7 @@ LEFT JOIN `Offers.Order_Discount_History_*` odh
   ON odh.order_number = t.order_number
 
 WHERE t.Site_key = 46
-AND order_date BETWEEN d.start_date AND d.end_date -- ENSURE RECENCY FOR UPDATED VIEW OF BUSINESS PERFORMANCE
+AND order_date = d.date -- ENSURE RECENCY FOR UPDATED VIEW OF BUSINESS PERFORMANCE
 AND locale_key IN (2,3,12,13)
 AND net_qty > 0
 AND order_status_key NOT IN (4,5)
@@ -95,7 +94,7 @@ AND ordered_free_gift_qty = 0 -- NO FREE GIFTS
 AND c.customer_key != -1 -- NO TIKTOK SHOP ORDERS TO AVOID METRIC SKEW
 AND order_sequence_no < 200
 AND cf.total_orders > 0
-AND odh._TABLE_SUFFIX BETWEEN REPLACE(CAST(d.start_Date AS STRING), '-', '') AND REPLACE(CAST(d.end_date AS STRING), '-','')
+AND odh._TABLE_SUFFIX = REPLACE(CAST(d.date AS STRING), '-', '')
 
 GROUP BY 
         locale_key
@@ -135,7 +134,7 @@ GROUP BY
           AND t.locale_key IN (2,3,12,13)
           AND DATE_DIFF(t.order_date, d.order_date, DAY) <= 90
           AND t.order_sequence_no = d.order_sequence_no + 1
-          AND t.order_date BETWEEN da.start_date AND DATE_ADD(da.end_date, INTERVAL 90 DAY)
+          AND t.order_date BETWEEN da.date AND DATE_ADD(da.date, INTERVAL 90 DAY)
           AND site_key = 46
           AND net_qty > 0
           AND order_status_key NOT IN (4,5)
@@ -160,7 +159,7 @@ GROUP BY
               WHERE 1=1
                 AND site_key = 46
                 AND locale_key IN (2,3,12,13)
-                AND order_date BETWEEN DATE_ADD(d.start_date, INTERVAL -1 YEAR) AND DATE_ADD(d.end_date, INTERVAL -1 YEAR)
+                AND order_date = DATE_ADD(d.date, INTERVAL -1 YEAR)
 
   )
 
@@ -178,7 +177,7 @@ GROUP BY
             WHERE 1=1
               AND site_key = 46
               AND T.locale_key IN (2,3,12,13)
-              AND t.order_date BETWEEN DATE_ADD(d.start_date, INTERVAL -1 YEAR) AND DATE_ADD(DATE_ADD(d.end_date, INTERVAL -1 YEAR), INTERVAL 90 DAY)
+              AND t.order_date BETWEEN DATE_ADD(d.date, INTERVAL -1 YEAR) AND DATE_ADD(DATE_ADD(d.date, INTERVAL -1 YEAR), INTERVAL 90 DAY)
               AND t.order_sequence_no > o.order_sequence_no
               AND DATE_DIFF(t.order_date, o.order_date, DAY) <= 90
 
@@ -221,7 +220,7 @@ FROM (
           WHERE 1=1
             AND site_key = 46
             AND locale_key IN (2,3,12,13)
-            AND order_date BETWEEN DATE_ADD(d.start_date, INTERVAL -1 YEAR) AND DATE_ADD(d.end_date, INTERVAL -1 YEAR)
+            AND order_date = DATE_ADD(d.date, INTERVAL -1 YEAR) 
 
 
           GROUP BY RIGHT(CAST(order_date AS STRING), 5), locale_key
@@ -239,7 +238,7 @@ Max(CAST(Full_Date AS Date)) AS Date
  
  FROM `Nutrition_Data.Date_D`, training_dates as d
  WHERE Day_Name_Of_Week IN ('Friday')
- AND Calendar_Year IN (EXTRACT(YEAR FROM Start_date), EXTRACT(YEAR FROM End_date))
+ AND Calendar_Year IN (EXTRACT(YEAR FROM date))
  
 GROUP BY
 Day_name_of_week,

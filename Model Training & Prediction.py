@@ -8,7 +8,7 @@ query = """
 
             SELECT * FROM `0_Ellis_B.Retention_Model_Training_Data*`
 
-            WHERE _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY), INTERVAL -1 YEAR) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY) AS STRING), '-','')
+            WHERE _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(DATE_ADD(CURRENT_DATE, INTERVAL -95 DAY), INTERVAL -1 YEAR) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -95 DAY) AS STRING), '-','')
 
 
                 """
@@ -112,13 +112,17 @@ DE_NC_rf.fit(DE_NC_features_train.drop('order_date', axis=1), DE_NC_target_train
 US_NC_rf.fit(US_NC_features_train.drop('order_date', axis=1), US_NC_target_train)
 JP_NC_rf.fit(JP_NC_features_train.drop('order_date', axis=1), JP_NC_target_train)
 
-query = """
-            SELECT * FROM `0_Ellis_B.orders_to_predict*`
 
-            WHERE _TABLE_SUFFIX = REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS STRING), '-','')
 
-            """
 
+
+#query = """
+ #           SELECT * FROM `0_Ellis_B.orders_to_predict*`
+#
+ #           WHERE _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -2 DAY) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS STRING), '-','')
+#
+ #           """
+"""
 test = pd.DataFrame(cs.DownloadJob(
     query=query,
     input_data_from='BQ',
@@ -142,6 +146,10 @@ test = pd.DataFrame(cs.DownloadJob(
     # set_date_conversion=True
     set_open_file=False,
     set_clear_save_file_location=False).run())
+
+"""
+
+test = pd.read_csv(r'orders_to_predict.csv')
 
 test['order_date'] = pd.to_datetime(test['order_date'])
 

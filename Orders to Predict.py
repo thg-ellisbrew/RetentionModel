@@ -12,7 +12,7 @@ WITH
 Dates as (
 
   SELECT 
-          DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS Start_date
+          DATE_ADD(CURRENT_DATE, INTERVAL -4 DAY) AS Start_date
           , DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS End_date
 
 )
@@ -277,9 +277,11 @@ SELECT DISTINCT
 
 """
 
+
+
 data_upload = cs.UploadJob(
     query=query,
-    input_data_from='BQ',
+   input_data_from='BQ',
     schema= [
 
         ("order_number", "INTEGER"),
@@ -335,4 +337,15 @@ data_upload = cs.UploadJob(
 
 )
 
-data_upload.run()
+
+data_download = pd.DataFrame(cs.DownloadJob(query = query
+                               , input_data_from='BQ'
+                               , output_data_type='DATAFRAME').run())
+
+data_download.to_csv(r"orders_to_predict.csv")
+
+
+#data_upload.run()
+
+
+
