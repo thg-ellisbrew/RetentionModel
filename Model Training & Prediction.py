@@ -4,6 +4,9 @@ from sklearn.model_selection import train_test_split
 import CsPy_Uploading as cs
 import os
 
+
+##### FETCHING MODEL TRAINING DATASET, TRANSACTION HISTORY FOR GB, DE, JP, US BETWEEN 90 DAYS AGO AND A YEAR PRIOR TO THAT POINT.
+
 query = """
 
             SELECT * FROM `0_Ellis_B.Retention_Model_Training_Data*`
@@ -37,16 +40,24 @@ train = pd.DataFrame(cs.DownloadJob(
     set_open_file=False,
     set_clear_save_file_location=False).run())
 
+
+## DATA CLEANING FOR TRAINING DATA
+
 train['order_date'] = pd.to_datetime(train['order_date'])
 train['month'] = train['order_date'].dt.month
 train['month'] = train['month'].astype(str)
-
+## ONE HOT ENCODING FOR MONTH FEATURES
 train = pd.get_dummies(train, columns=['month'], prefix='month')
+
+
+## SPLITTING TRAINING DATA BY LOCALE, ALL LOCALES HAVE DISTINCT BEHAVIOURS TO STATISTICALLY UNDERSTAND.
 
 GB_train = train[train['locale_key'] == 3]
 DE_train = train[train['locale_key'] == 2]
 JP_train = train[train['locale_key'] == 13]
 US_train = train[train['locale_key'] == 12]
+
+## SPLITTING BY NC/RC, GROUPS HAVE DISTINCT BEHAVIOURS TO STATISTICALLY UNDERSTAND.
 
 GB_NC_train = GB_train[GB_train['order_sequence_no'] == 1]
 DE_NC_train = DE_train[DE_train['order_sequence_no'] == 1]
@@ -62,6 +73,7 @@ US_RC_train = US_train[US_train['order_sequence_no'] != 1]
 
 ## DROPPED FLASH IND AND SINGLES IND FROM GB,DE,US AS THEY ARE SPECIFIC TO JP
 
+## TRAIN/TEST SPLITTING
 
 GB_NC_features_train, GB_NC_features_test, GB_NC_target_train, GB_NC_target_test = train_test_split(GB_NC_train.drop(
     ['Retention90_Ind', 'locale_key', 'order_frequency', 'order_sequence_no', 'Singles_Ind', 'Flash_Ind',
@@ -89,6 +101,8 @@ US_RC_features_train, US_RC_features_test, US_RC_target_train, US_RC_target_test
     US_RC_train.drop(['Retention90_Ind', 'locale_key', 'Singles_Ind', 'Flash_Ind', 'Golden_Week_Ind'], axis=1),
     US_RC_train['Retention90_Ind'], test_size=0.2, random_state=42)
 
+## INITIALISING XGBoost CLASSIFICATION MODELS FOR EACH LOCALE AND NC/RC SPLIT, 8 MODELS IN RETENTION ENSEMBLE
+
 GB_NC_rf = xgb.XGBClassifier(objective='binary:logistic', use_label_encoder=False, eval_metric='logloss')
 DE_NC_rf = xgb.XGBClassifier(objective='binary:logistic', use_label_encoder=False, eval_metric='logloss')
 JP_NC_rf = xgb.XGBClassifier(objective='binary:logistic', use_label_encoder=False, eval_metric='logloss')
@@ -113,46 +127,13 @@ US_NC_rf.fit(US_NC_features_train.drop('order_date', axis=1), US_NC_target_train
 JP_NC_rf.fit(JP_NC_features_train.drop('order_date', axis=1), JP_NC_target_train)
 
 
-
-
-
-#query = """
- #           SELECT * FROM `0_Ellis_B.orders_to_predict*`
-#
- #           WHERE _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -2 DAY) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -1 DAY) AS STRING), '-','')
-#
- #           """
-"""
-test = pd.DataFrame(cs.DownloadJob(
-    query=query,
-    input_data_from='BQ',
-    output_data_type='DATAFRAME',
-    # data_file='',
-    # dataframe='',
-    # columns='',
-    # upload_data_type='',
-    # bq_key_path='',
-    # bq_key_name='',
-    # bq_upload_type='',
-    # sql_server='',
-    # sql_key_path='',
-    # sql_key_name='',
-    save_file_path=os.path.join(os.path.dirname(__file__), 'CSV/'),
-    account_first_name='Ellis',
-    account_surname='Brew',
-    # account_file_path='',
-    # set_logging=True,
-    # set_testing=False,
-    # set_date_conversion=True
-    set_open_file=False,
-    set_clear_save_file_location=False).run())
-
-"""
+## CALLING LIST OF ORDERS FOR WHICH WE WANT TO PREDICT RETENTION PROBABILITIES.
 
 test = pd.read_csv(r'orders_to_predict.csv')
 
 test['order_date'] = pd.to_datetime(test['order_date'])
 
+## ONE HOT ENCODING MONTH FEATURES
 for month in range(1, 13):
     test[f'month_{month}'] = test['order_date'].dt.month == month
 
@@ -165,6 +146,8 @@ test = test[['order_number', 'locale_key', 'order_date', 'volume', 'LY_Retention
              'customer_lifetime', 'order_frequency', 'month_1',
              'month_10', 'month_11', 'month_12', 'month_2', 'month_3', 'month_4',
              'month_5', 'month_6', 'month_7', 'month_8', 'month_9']]
+
+## SPLITTING
 
 test_GB = test[test['locale_key'] == 3]
 test_DE = test[test['locale_key'] == 2]
@@ -193,7 +176,7 @@ test_JP_RC_new = test_JP[test_JP['order_sequence_no'] != 1]
 test_US_RC_new = test_US[test_US['order_sequence_no'] != 1]
 
 
-
+## PREDICTING PROBABILITIES WITH THE NOW-TRAINED MODELS
 
 test_GB_NC_new['prediction'] = GB_NC_rf.predict_proba(test_GB_NC.drop(
     ['order_number', 'order_date', 'locale_key', 'order_frequency', 'order_sequence_no', 'Flash_Ind', 'Singles_Ind',
@@ -219,10 +202,16 @@ test_US_RC_new['prediction'] = US_RC_rf.predict_proba(
     test_US_RC.drop(['order_number', 'order_date', 'locale_key', 'Flash_Ind', 'Singles_Ind', 'Golden_Week_Ind'],
                     axis=1))[:, 1]
 
+
+## RE-COMBINING RESULTS INTO ONE DATASET
+
 dfs = [test_GB_NC_new, test_GB_RC_new, test_DE_NC_new, test_DE_RC_new, test_JP_NC_new, test_JP_RC_new, test_US_NC_new,
        test_US_RC_new]
 
 full_test = pd.concat(dfs, ignore_index=True)
+
+
+## UPLOADING RESULTS TO BQ TABLE SPLIT BY ORDER DATE.
 
 upload_bq = cs.UploadJob(dataframe=full_test,
 
