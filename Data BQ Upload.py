@@ -2,7 +2,6 @@ import CsPy_Uploading as cs
 import os
 import pandas as pd
 
-
 ### THIS SCRIPT PULLS THE TRAINING DATA INTO A STATIC TABLE IN BIGQUERY SO THAT THE NEXT SCRIPT CAN PULL THE DATA QUICKLY AND EASILY TO USE FOR MACHINE LEARNING MODEL TRAINING.
 ### USES BIGQUERY TO PULL DATA AND UPLOADS DATA TO A TABLE IN 0_Ellis_B
 
@@ -15,7 +14,7 @@ Training_dates AS (
 
               SELECT 
                       DATE_ADD(CURRENT_DATE, INTERVAL -91 DAY) AS date
-                    
+
 )
 
 
@@ -126,7 +125,7 @@ GROUP BY
                   , t.order_sequence_no
 
         FROM Data d, training_dates as da
-            
+
             INNER JOIN Ditto_HQDW.Transactions t 
               ON t.customer_key = d.customer_key 
 
@@ -173,7 +172,7 @@ GROUP BY
               INNER JOIN Orders o
                 ON o.customer_key = t.customer_key
 
-              
+
             WHERE 1=1
               AND site_key = 46
               AND T.locale_key IN (2,3,12,13)
@@ -235,16 +234,16 @@ FROM (
 
 SELECT
 Max(CAST(Full_Date AS Date)) AS Date
- 
+
  FROM `Nutrition_Data.Date_D`, training_dates as d
  WHERE Day_Name_Of_Week IN ('Friday')
  AND Calendar_Year IN (EXTRACT(YEAR FROM date))
- 
+
 GROUP BY
 Day_name_of_week,
 EXTRACT(MONTH FROM Full_Date),
 EXTRACT(YEAR FROM Full_Date)
- 
+
 
 )
 
@@ -261,7 +260,7 @@ SELECT DISTINCT
                 , EXTRACT(WEEK FROM order_date) as Week
                 , CASE WHEN p.date IS NOT NULL THEN 1 ELSE 0 END AS Payday_Ind
                 , CASE WHEN EXTRACT(MONTH FROM order_date) = 11 AND EXTRACT(DAY FROM order_date) = 11 THEN 1 ELSE 0 END AS Singles_Ind
-                , CASE WHEN EXTRACT(DAY FROM order_Date) = 11 THEN 1 ELSE 0 END AS Flash_Ind
+                , CASE WHEN EXTRACT(DAY FROM order_Date) = EXTRACT(MONTH FROM order_Date) THEN 1 ELSE 0 END AS Flash_Ind
                 , CASE WHEN EXTRACT(MONTH FROM order_Date) = 4 AND EXTRACT(DAY FROM Order_Date) IN (29,30) THEN 1 
                        WHEN EXTRACT(MONTH FROM order_date) = 5 AND EXTRACT(DAY FROM order_date) BETWEEN 1 AND 6 THEN 1
                   ELSE 0 
@@ -307,11 +306,10 @@ SELECT DISTINCT
 
 """
 
-
 data_upload = cs.UploadJob(
     query=query,
     input_data_from='BQ',
-    schema= [
+    schema=[
 
         ("locale_key", "INTEGER"),
         ("order_date", "DATE"),
