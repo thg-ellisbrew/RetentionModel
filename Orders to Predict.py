@@ -346,6 +346,3 @@ data_download.to_csv(r"orders_to_predict.csv")
 
 
 #data_upload.run()
-
-
-
