@@ -10,8 +10,8 @@ WITH
 Training_dates AS (
 
               SELECT 
-                      DATE_ADD(CURRENT_DATE, INTERVAL -540 DAY) AS Start_Date
-                    , DATE_ADD(CURRENT_DATE, INTERVAL -180 DAY) AS End_Date
+                      DATE_ADD(CURRENT_DATE, INTERVAL -181 DAY) AS Start_Date
+                    , DATE_ADD(CURRENT_DATE, INTERVAL -181 DAY) AS End_Date
 )
 
 
