@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-
+import CsPy_Uploading as cs
 # In[1]:
 
 
@@ -10,12 +10,46 @@ import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from datetime import datetime
+import os
 
 
 # In[2]:
 
 
-data = pd.read_csv('CLV_Training_Data.csv').drop('Unnamed: 0', axis=1)
+query = """
+
+            SELECT * FROM `0_Ellis_B.NC_CLV_Model_Training_Data_*`
+            
+            WHERE 1=1
+                AND _TABLE_SUFFIX BETWEEN REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -540 DAY) AS STRING), '-','') AND REPLACE(CAST(DATE_ADD(CURRENT_DATE, INTERVAL -181 DAY) AS STRING), '-','')
+
+"""
+
+
+data = pd.DataFrame(cs.DownloadJob(
+      query = query
+    , input_data_from='BQ'
+    , output_data_type='DATAFRAME',
+    # data_file='',
+    # dataframe='',
+    # columns='',
+    # upload_data_type='',
+    # bq_key_path='',
+    # bq_key_name='',
+    # bq_upload_type='',
+    # sql_server='',
+    # sql_key_path='',
+    # sql_key_name='',
+    save_file_path=os.path.join(os.path.dirname(__file__), 'CSV/'),
+    account_first_name='Ellis',
+    account_surname='Brew',
+    # account_file_path='',
+    # set_logging=True,
+    # set_testing=False,
+    # set_date_conversion=True
+    set_open_file=False,
+    set_clear_save_file_location=False).run())
+
 data['order_date'] = pd.to_datetime(data['order_date'])
 data['revenue'] = np.round(data['revenue'],2)
 data = data[data['revenue'] > 0]
